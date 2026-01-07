@@ -1,0 +1,117 @@
+Bootstrap: docker
+From: debian:bookworm
+## Move files
+
+%files
+certs/bundle-ca.crt /etc/ssl/certs
+certs/bundle-ca.crt /usr/local/share/ca-certificates/
+odbc/clouderaimpalaodbc_2.6.14.1016-2_amd64.deb /clouderaimpalaodbc_2.6.14.1016-2_amd64.deb
+odbc/odbcinst.ini /odbcinst.ini
+odbc/cloudera.impalaodbc.ini /cloudera.impalaodbc.ini
+odbc/odbc.ini /odbc.ini
+
+%post
+# MAINTAINER Matthew Wersebe (CDC/NCIRD/ID) < uee9@cdc.gov >
+# KARMA-flu: Kmer Assisted Reassortant Mapping Algorithm for Influenza
+# 2025-06-03
+
+DEBIAN_FRONTEND=noninteractive
+
+apt-get update --fix-missing -y
+
+#apt-get upgrade -y
+
+# Install tools to add external repositories
+apt-get install -y curl gnupg lsb-release \
+	r-base r-base-dev \
+	r-cran-tidyverse \
+	ca-certificates \
+	build-essential \
+	bzip2 wget \
+	dos2unix \
+        debhelper \
+	libcurl4-openssl-dev \
+	libssl-dev cmake \
+	libmariadb-dev \
+	unixodbc-dev \
+	unixodbc
+
+## Install unixodbc from source:
+
+wget --no-check-certificate https://www.unixodbc.org/unixODBC-2.3.12.tar.gz
+tar -xvzf unixODBC-2.3.12.tar.gz
+cd unixODBC-2.3.12
+./configure --prefix=/usr/local/unixODBC
+make
+make install
+
+cd ../
+
+# Install Impala ODBC driver
+dpkg -i clouderaimpalaodbc_2.6.14.1016-2_amd64.deb
+
+cp /odbc.ini /etc/odbc.ini
+cp /odbcinst.ini /etc/odbcinst.ini
+cp /cloudera.impalaodbc.ini /opt/cloudera/impalaodbc/lib/64/cloudera.impalaodbc.ini
+
+## Install Arrow Dependencies which is a dependency installed below:
+
+wget https://packages.apache.org/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+
+apt-get install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+apt-get update
+apt-get install -y -V libarrow-dev # For C++
+apt-get install -y -V libarrow-glib-dev # For GLib (C)
+apt-get install -y -V libarrow-dataset-dev # For Apache Arrow Dataset C++
+apt-get install -y -V libarrow-dataset-glib-dev # For Apache Arrow Dataset GLib (C)
+apt-get install -y -V libarrow-acero-dev # For Apache Arrow Acero
+apt-get install -y -V libarrow-flight-dev # For Apache Arrow Flight C++
+apt-get install -y -V libarrow-flight-glib-dev # For Apache Arrow Flight GLib (C)
+apt-get install -y -V libarrow-flight-sql-dev # For Apache Arrow Flight SQL C++
+apt-get install -y -V libarrow-flight-sql-glib-dev # For Apache Arrow Flight SQL GLib (C)
+apt-get install -y -V libgandiva-dev # For Gandiva C++
+apt-get install -y -V libgandiva-glib-dev # For Gandiva GLib (C)
+apt-get install -y -V libparquet-dev # For Apache Parquet C++
+apt-get install -y -V libparquet-glib-dev
+
+## INSTALL CERTS:
+update-ca-certificates
+
+## Add Additional R packages:
+R -e 'install.packages(
+    c(
+        "optparse",
+        "DBI",
+        "odbc",
+        "ape",
+        "kmer",
+        "BiocManager",
+        "caret",
+        "doParallel",
+        "parallel",
+        "foreach",
+        "kknn"
+    ), 
+    dependencies = TRUE)'
+
+## Testing the expedited arrow installation:
+
+R -e 'install.packages("nanoparquet")'
+
+## USE BiocManager to install biostrings:
+
+R -e 'BiocManager::install(
+    "Biostrings", 
+    force =  TRUE, 
+    update = FALSE, 
+    ask = FALSE)'
+
+rm -rf /var/lib/apt/lists/*
+#### Configure Environmental Variables ###
+
+%environment
+export ODBCINI=/etc/odbc.ini
+export ODBCSYSINI=/etc
+export CLOUDERAIMPALAINI=/opt/cloudera/impalaodbc/lib/64/cloudera.impalaodbc.ini
+export LD_LIBRARY_PATH=/opt/cloudera/impalaodbc/lib/64:/usr/local/unixODBC:$LD_LIBRARY_PATH
+

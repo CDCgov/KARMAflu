@@ -1,0 +1,713 @@
+#!/bin/bash
+
+################################################################################
+# Matthew Wersebe
+# Influenza Division, CDC
+# KARMAflu
+# 06/02/2025
+# KARMA-flu execution control
+################################################################################
+
+
+if [[ "${1}" == "--help" || "${1}" == "-h" ]]; then
+
+	echo   "Usage: positional arguements
+		annotate: run DAIS ribosome to generate the genome text file.
+		qc: run quality control analysis on segment sequences.
+		classify: run the karma-flu classification workflow.
+		confirm: run the karma-flu confirmationa and posthoc analysis workflow. Upload to endpoints.
+		env: locate all required dependencies for execution and print to a file.
+		version: print version information and exit. 
+
+		-h or --help print this help message and exit."
+	exit 0
+
+elif [[ "${1}" == "version" ]]; then
+
+	echo "KARMA-flu v0.0.0
+	      KARMA-flu: Kmer Assisted Reassortant Mapping Algorithm.
+	      KARMA-flu is a product of the US Centers for Disease Control and Prevention,
+	      National Center for Immunizations and Respiratory Diseases, Influenza Division.
+	      KARMA-flu is distributed under the Apache 2.0 License.
+	      If you found KARMA-flu helpful in your work, please cite:
+	      Wersebe et al. (2025) doi:XXXX.XXX.XX"
+	exit 0
+
+elif [[ "${1}" == "env" ]]; then
+
+	shift
+	echo "subcommand testenv: check for KF dependencies and system requirements."
+
+        if [[ "${1}" == "--help" || "${1}" == "-h" ]]; then
+                echo "testenv takes no named arguements!"
+                exit 0
+        fi
+
+	LOG="$(date -I)_kf_testenv.log"
+	touch ${LOG}
+
+	echo "Testing for required software." >> ${LOG} 2>&1
+
+	echo "which activate: $(which activate)" >> ${LOG} 2>&1
+
+	echo "which conda: $(which conda)" >> ${LOG} 2>&1
+
+	echo "which micromamba: $(which micromamba)" >> ${LOG} 2>&1
+
+	echo "which snakemake: $(ls /groups/NCIRD/ID/VSDB/envs/Snakemake/bin/snakemake)" >> ${LOG} 2>&1
+
+	echo "which singularity: $(which singularity)" >> ${LOG} 2>&1
+
+	echo "singularity version: $(singularity version)" >> ${LOG} 2>&1
+
+	echo "Enviroment testing complete at: $(date)" >> ${LOG} 2>&1
+
+	echo "Enviroment testing complete at: $(date)"
+
+elif [[ "${1}" == "annotate" ]]; then
+
+	shift
+
+	echo "subcommand annotate: run DAIS ribosome to generate the genome text file"
+
+	## Print help and exit:
+
+	if [[ "${1}" == "--help" || "${1}" == "-h" ]]; then
+		echo "annotate Usage:
+			--fasta | -f: path to sequences in fasta format. Required.
+			--today | -t: date string. Default $(date -I).
+			--now | -n: time string. Default $(date +'%H-%M-%S').
+			--snakefile | -s: Snakefile file path. Default workflows/annotate.smk.
+			--config | -f: Config file path. Default workflows/annotate_config.yaml.
+			--cores | -c: Number of cores. Default 12.
+			--source | -e: micromamba or conda. Default micromamba."
+		exit 0
+	fi
+
+
+	##set up defaults:
+
+ 	FASTA="NA"
+	TODAY=$(date -I)
+	NOW=$(date +'%H-%M-%S')
+	SNAKEFILE="workflows/annotate.smk"
+	CONFIG="workflows/annotate_config.yaml"
+	SOURCE="micromamba"
+	CORES=12
+
+	#Configure command line options:
+
+	while [ "$#" -gt 0 ]
+	do
+		case "$1" in
+		--fasta | -f)
+		FASTA="$2"
+		shift 2
+		;;
+		--today | -t)
+		TODAY="$2"
+		shift 2
+		;;
+                --now | -n)
+                NOW="$2"
+                shift 2
+                ;;
+                --snakefile | -s)
+                SNAKEFILE="$2"
+                shift 2
+                ;;
+                --config | -f)
+                CONFIG="$2"
+                shift 2
+                ;;
+                --source | -e)
+                SOURCE="$2"
+                shift 2
+                ;;
+                --cores | -c)
+                CORES="$2"
+                shift 2
+                ;;
+		*)
+		echo "Unknown argument: $1! Use --help or -h to see acceptable arguements."
+		exit 1
+		;;
+		esac
+	done
+
+	## Echo
+
+	if [ ${FASTA} == "NA" ]
+	then
+	echo "Error! Missing input fasta file. Exiting."
+	exit 1
+	else
+
+	echo "Workflow starting with:
+		${FASTA} as input fasta,
+		${TODAY} as today,
+		${NOW} as now,
+		${SNAKEFILE} as snakfile,
+		${CONFIG} as config file,
+		${SOURCE} as conda source,
+		${CORES} as number of cores."
+	fi
+
+	## Activate an envi with Snakemake
+
+	if [[ ${SOURCE} == "micromamba" ]]; then
+
+	# Exit on error
+	set -e
+
+	# 1. Define micromamba location
+	MAMBA_ROOT=/usr/local
+
+	# 2. Load micromamba shell hook
+	eval "$($MAMBA_ROOT/bin/micromamba shell hook --shell=bash)"
+
+	# 3. Activate the environment
+	micromamba activate Snakemake
+
+	else
+	## I guess you could figure out the source for your current machine and use that.
+	source ${SOURCE}
+	conda activate Snakemake
+
+	fi
+
+	## Create the snakelog directory:
+
+	if [ -d "snakelog" ]
+	then
+		echo "snakelog directory exists"
+	else
+		echo "snakelog does not exist. Creating directory snakelog"
+		mkdir snakelog
+	fi
+
+	SNAKELOG="snakelog/${TODAY}_${NOW}_annotate.log"
+
+	#run the snakemake workflow:
+	snakemake --snakefile ${SNAKEFILE} \
+		--cores ${CORES} \
+		--configfile ${CONFIG} \
+		--config today=${TODAY} now=${NOW} infile=${FASTA} \
+		-w 30 --use-singularity > ${SNAKELOG} 2>&1
+
+	## Exit the snakemake environment:
+
+	if [[ ${SOURCE} == "micromamba" ]]; then
+
+        micromamba deactivate
+
+        ## Specific to the CDP client machine
+        else
+	      conda deactivate
+
+	fi
+
+	## END and Notify:
+	TIMESTAMP=$(date)
+
+	echo "KARMA-flu annotate Run Complete at: ${TIMESTAMP}."
+
+elif [[ "${1}" == "qc" ]]; then
+
+	shift
+
+	echo "subcommand qc: run the karma-flu quality control workflow"
+
+	if [[ "${1}" == "--help" || "${1}" == "-h" ]]; then
+		echo "qc Usage:
+			--genome | -g: DAIS ribosome genome text file. Required.
+			--refs | -r: Reference file directory for QC analysis. references.
+			--today | -t: date string. Default $(date -I).
+			--now | -n: time string. Default $(date +'%H-%M-%S').
+			--snakefile | -s: Snakefile file path. Default workflows/quality_control.smk.
+			--config | -f: Config file path. Default workflows/quality_control_config.yaml.
+			--source | -e: micromamba or conda. Default micromamba."
+		exit 0
+	fi
+
+	##set up defaults:
+
+	GENOME="NA"
+        TODAY=$(date -I)
+	REFS="references"
+        NOW=$(date +'%H-%M-%S')
+        SNAKEFILE="workflows/quality_control.smk"
+        CONFIG="workflows/quality_control_config.yaml"
+        SOURCE="micromamba"
+        CORES=1
+
+	#Configure command line options:
+
+        while [ "$#" -gt 0 ]
+        do
+                case "$1" in
+                --genome | -g)
+                GENOME="$2"
+                shift 2
+                ;;
+                --refs | -r)
+                REFS="$2"
+                shift 2
+                ;;
+                --today | -t)
+                TODAY="$2"
+                shift 2
+                ;;
+                --now | -n)
+                NOW="$2"
+                shift 2
+                ;;
+                --snakefile | -s)
+                SNAKEFILE="$2"
+                shift 2
+                ;;
+                --config | -f)
+                CONFIG="$2"
+                shift 2
+                ;;
+                --source | -e)
+                SOURCE="$2"
+                shift 2
+                ;;
+                --cores | -c)
+                CORES="$2"
+                shift 2
+                ;;
+                *)
+                echo "Unknown argument: $1! Use --help or -h to see acceptable arguements."
+                exit 1
+                ;;
+                esac
+        done
+
+        ## Echo
+
+        if [[ ${GENOME} == "NA" ]]; then
+                echo "Error! Genome file required. Exiting!"
+                exit 1
+        else
+
+        echo "Workflow starting with:
+                ${GENOME} as input,
+		${REFS} as reference file location,
+                ${TODAY} as today,
+                ${NOW} as now,
+                ${SNAKEFILE} as snakefile,
+                ${CONFIG} as config file,
+                ${SOURCE} as conda source,
+                ${CORES} as number of cores."
+        fi
+
+
+
+	if [[ ${SOURCE} == "micromamba" ]]; then
+
+        # Exit on error
+        set -e
+
+        # 1. Define micromamba location
+        MAMBA_ROOT=/usr/local
+
+        # 2. Load micromamba shell hook
+        eval "$($MAMBA_ROOT/bin/micromamba shell hook --shell=bash)"
+
+        # 3. Activate the environment
+        micromamba activate Snakemake
+
+        else
+        ## I guess you could figure out the source for your current machine and use that.
+        source ${SOURCE}
+        conda activate Snakemake
+
+        fi
+
+        ## Create the snakelog directory:
+
+        if [ -d "snakelog" ]
+        then
+                echo "snakelog directory exists"
+        else
+                echo "snakelog does not exist. Creating directory snakelog"
+                mkdir snakelog
+        fi
+
+        SNAKELOG="snakelog/${TODAY}_${NOW}_qc.log"
+
+        #run the snakemake workflow:
+        snakemake --snakefile ${SNAKEFILE} \
+                --cores ${CORES} \
+                --configfile ${CONFIG} \
+                --config today=${TODAY} now=${NOW} infile=${GENOME} refs=${REFS} \
+                -w 30 --use-singularity > ${SNAKELOG} 2>&1
+
+        ## Exit the snakemake environment:
+
+        if [[ ${SOURCE} == "micromamba" ]]; then
+
+        micromamba deactivate
+
+        ## Specific to the CDP client machine
+        else
+        conda deactivate
+
+        fi
+
+        ## END and Notify:
+        TIMESTAMP=$(date)
+
+        echo "KARMA-flu qc Run Complete at: ${TIMESTAMP}."
+
+elif [[ "${1}" == "classify" ]]; then
+
+	shift
+
+	echo "subcommand classify: run the karma-flu classification workflow."
+
+        ## Print help and exit:
+
+        if [[ "${1}" == "--help" || "${1}" == "-h" ]]; then
+                echo "classify Usage:
+			--genome | -g: DAIS ribosome genome file text file. Required.
+			--pca | -p: Path to PCA model object. Default: models/pca/pca_models.rds.gz.
+			--kknn | -k: Path to kknn model object. Default: models/knn/kknn_models.rds.gz.
+			--metadata | -m: Path to metadata csv file. Required.
+                        --today | -t: Date string. Default $(date -I).
+                        --now | -n: Time string. Default $(date +'%H-%M-%S').
+                        --snakefile | -s: Snakefile file path. Default workflows/classify_data.smk.
+                        --config | -f: Config file path. Default workflows/classify_config.yaml.
+                        --cores | -c: Number of cores. Default 12.
+                        --source | -e: micromamba or conda. Default micromamba."
+                exit 0
+        fi
+
+
+        ##set up defaults:
+
+	GENOME="NA"
+	METADATA="NA"
+	PCA="models/pca/pca_models.rds.gz"
+	KKNN="models/knn/kknn_models.rds.gz"
+        TODAY=$(date -I)
+        NOW=$(date +'%H-%M-%S')
+        SNAKEFILE="workflows/classify_data.smk"
+        CONFIG="workflows/classify_config.yaml"
+        SOURCE="micromamba"
+        CORES=12
+
+
+        #Configure command line options:
+
+        while [ "$#" -gt 0 ]
+        do
+                case "$1" in
+		--genome | -g)
+		GENOME="$2"
+		shift 2
+		;;
+                --pca | -p)
+                PCA="$2"
+                shift 2
+                ;;
+                --kknn | -k)
+                KKNN="$2"
+                shift 2
+                ;;
+                --metadata | -m)
+                METADATA="$2"
+                shift 2
+                ;;
+                --today | -t)
+                TODAY="$2"
+                shift 2
+                ;;
+                --now | -n)
+                NOW="$2"
+                shift 2
+                ;;
+                --snakefile | -s)
+                SNAKEFILE="$2"
+                shift 2
+                ;;
+                --config | -f)
+                CONFIG="$2"
+                shift 2
+                ;;
+                --source | -e)
+                SOURCE="$2"
+                shift 2
+                ;;
+                --cores | -c)
+                CORES="$2"
+                shift 2
+                ;;
+                *)
+                echo "Unknown argument: $1! Use --help or -h to see acceptable arguements."
+                exit 1
+                ;;
+                esac
+        done
+
+        ## Echo
+
+	if [[ ${GENOME} == "NA" ]]; then
+		echo "Error! Genome file required. Exiting!"
+		exit 1
+	elif [[ ${METADATA} == "NA" ]]; then
+		echo "Error! Metadata file required. Exiting!"
+		exit 1
+	else
+
+        echo "Workflow starting with:
+		${GENOME} as input,
+		${METADATA} as metadat file,
+		${PCA} as PCA model location,
+		${KKNN} as KNN model location,
+                ${TODAY} as today,
+                ${NOW} as now,
+                ${SNAKEFILE} as snakefile,
+                ${CONFIG} as config file,
+                ${SOURCE} as conda source,
+                ${CORES} as number of cores."
+	fi
+
+        ## Activate an envi with Snakemake
+
+        if [[ ${SOURCE} == "micromamba" ]]; then
+
+        # Exit on error
+        set -e
+
+        # 1. Define micromamba location
+        MAMBA_ROOT=/usr/local
+
+        # 2. Load micromamba shell hook
+        eval "$($MAMBA_ROOT/bin/micromamba shell hook --shell=bash)"
+
+        # 3. Activate the environment
+        micromamba activate Snakemake
+
+        else
+        ## I guess you could figure out the source for your current machine and use that.
+        source ${SOURCE}
+        conda activate Snakemake
+
+        fi
+
+        ## Create the snakelog directory:
+
+        if [ -d "snakelog" ]
+        then
+                echo "snakelog directory exists"
+        else
+                echo "snakelog does not exist. Creating directory snakelog"
+                mkdir snakelog
+        fi
+
+        SNAKELOG="snakelog/${TODAY}_${NOW}_classify.log"
+
+        #run the snakemake workflow:
+        snakemake --snakefile ${SNAKEFILE} \
+                --cores ${CORES} \
+                --configfile ${CONFIG} \
+                --config today=${TODAY} now=${NOW} \
+		metadata=${METADATA} infile=${GENOME} pca_mods=${PCA} kknn_mods=${KKNN} \
+                -w 30 --use-singularity > ${SNAKELOG} 2>&1
+
+        ## Exit the snakemake environment:
+
+        if [[ ${SOURCE} == "micromamba" ]]; then
+
+        micromamba deactivate
+
+        ## Specific to the CDP client machine
+        else
+        conda deactivate
+
+        fi
+
+        ## END and Notify:
+        TIMESTAMP=$(date)
+
+        echo "KARMA-flu Classify Run Complete at: ${TIMESTAMP}."
+
+
+elif [[ "${1}" == "confirm" ]]; then
+  shift
+	echo "subcommand confirm: Confirm classifications using other bioinformatics tools."
+
+	## Print help and exit:
+
+	if [[ "${1}" == "--help" || "${1}" == "-h" ]]; then
+		echo "confirm Usage:
+			--today | -t: Date string. Default $(date -I).
+			--now | -n: Today string. Default $(date +'%H-%M-%S').
+			--infasta | -i: Path to BLAST fasta. Required.
+			--blastdb | -d: Path to BLAST DB to search against. Default models/blast/blast_db.out.
+			--querymeta | -m: Path to query sequences metadata files. Required.
+			--targetsmeta | -t: Path to targets metadata. Default models/blast/db_metadata.rds.gz.
+			--snakefile | -s: Snakefile file path. Default workflows/confirm_classifications.smk.
+			--config | -f: Config file path. Default workflows/confirm_classifications_config.yaml.
+			--cores | -c: Number of cores. Default 12.
+			--source | -e: Path to singularity container. Default Micromamba."
+		exit 0
+	fi
+
+
+	##set up defaults:
+	FASTA="NA"
+	BLASTDB="models/blast/blast_db.out"
+	QUERYM="NA"
+	TARGETM="models/blast/db_metadata.rds.gz"
+	NOW=$(date +'%H-%M-%S')
+	TODAY=$(date -I)
+	SNAKEFILE="workflows/confirm_classifications.smk"
+	CONFIG="workflows/confirm_classifications_config.yaml"
+	SOURCE="micromamba"
+	CORES=1
+
+	#Configure command line options:
+
+	while [ "$#" -gt 0 ]
+	do
+	case "$1" in
+                --infasta | -i)
+                FASTA="$2"
+                shift 2
+                ;;
+                --blastdb | -d)
+                BLASTDB="$2"
+                shift 2
+                ;;
+                --querymeta | -m)
+                QUERYM="$2"
+                shift 2
+                ;;
+                --targetsmeta | -t)
+                TARGETM="$2"
+                shift 2
+                ;;
+		--today | -t)
+		TODAY="$2"
+		shift 2
+		;;
+		--now | -n)
+		NOW="$2"
+		shift 2
+		;;
+		--snakefile | -s)
+		SNAKEFILE="$2"
+		shift 2
+		;;
+		--config | -f)
+		CONFIG="$2"
+		shift 2
+		;;
+		--source | -e)
+		SOURCE="$2"
+		shift 2
+		;;
+		--cores | -c)
+		CORES="$2"
+		shift 2
+		;;
+		*)
+		echo "Unknown argument: $1! Use --help or -h to see acceptable arguements."
+		exit 1
+		;;
+		esac
+	done
+
+	## Echo
+
+	if [[ ${FASTA} == "NA" ]]; then
+                echo "Error! Query fasta file required. Exiting!"
+                exit 1
+        elif [[ ${QUERYM} == "NA" ]]; then
+                echo "Error! Query metadata file required. Exiting!"
+                exit 1
+        else
+
+	echo "Workflow starting with:
+		${TODAY} as today,
+		${NOW} as now,
+		${FASTA} as query fasta,
+		${QUERYM} as query metadata,
+		${BLASTDB} as target DB,
+		${TARGETM} as target metadata,
+		${SNAKEFILE} as snakfile,
+		${CONFIG} as config file,
+		${SOURCE} as conda source,
+		${CORES} as number of cores."
+	fi
+
+	## Activate an envi with Snakemake
+
+	if [[ ${SOURCE} == "micromamba" ]]; then
+
+	# Exit on error
+	set -e
+
+	# 1. Define micromamba location
+	MAMBA_ROOT=/usr/local
+
+	# 2. Load micromamba shell hook
+	eval "$($MAMBA_ROOT/bin/micromamba shell hook --shell=bash)"
+
+	# 3. Activate the environment
+	micromamba activate Snakemake
+
+	else
+	## I guess you could figure out the source for your current machine and use that.
+	source ${SOURCE}
+	conda activate Snakemake
+
+	fi
+
+	## Create the snakelog directory:
+
+	if [ -d "snakelog" ]
+	then
+		echo "snakelog directory exists"
+	else
+		echo "snakelog does not exist. Creating directory snakelog"
+		mkdir snakelog
+	fi
+
+	echo "WARNING! Using on disc DB path. Check if stale!"
+
+	SNAKELOG="snakelog/${TODAY}_confirm.log"
+
+	#run the make db snakemake workflow:
+	snakemake --snakefile  ${SNAKEFILE} \
+		--cores ${CORES} \
+		--configfile ${CONFIG} \
+		--config today=${TODAY} now=${NOW} blastdb=${BLASTDB} \
+		infile=${FASTA} targets_meta=${TARGETM} query_meta=${QUERYM} \
+		-w 20 --use-singularity --singularity-args '-H $(pwd)' > ${SNAKELOG} 2>&1
+
+	## Exit the snakemake environment:
+
+	if [[ ${SOURCE} == "micromamba" ]]; then
+
+        micromamba deactivate
+
+        ## Specific to the CDP client machine
+  	else
+        conda deactivate
+
+	fi
+
+	## END and Notify:
+	TIMESTAMP=$(date)
+
+	echo "KARMA-flu Confirm Run Complete at: ${TIMESTAMP}."
+
+else
+	echo "Error! Subcommand not recognized! See help menu -h or --help for acceptable options."
+	exit 1
+fi

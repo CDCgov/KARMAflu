@@ -1,0 +1,33 @@
+Bootstrap: docker
+From: r-base:4.5.0
+Stage: spython-base
+
+%files
+Certs/bundle-ca.crt /etc/ssl/certs
+Certs/bundle-ca.crt /usr/local/share/ca-certificates/
+%post
+# MAINTAINER Matthew Wersebe (CDC/NCIRD/ID) < uee9@cdc.gov >
+# LAIVFinde.R
+# 2025-05-13
+
+DEBIAN_FRONTEND=noninteractive
+apt-get update --fix-missing -y
+apt-get upgrade -y
+apt-get install -y r-cran-tidyverse git ca-certificates
+
+## INSTALL CERTS:
+update-ca-certificates
+
+## Add Additional R packages:
+R -e 'install.packages("optparse", dependencies = TRUE)'
+R -e 'install.packages("Rcpp", dependencies = TRUE)'
+
+## Add the TN93 engine:
+
+git clone https://github.com/sdwfrost/libtn93.git
+
+mv libtn93/Rcpp/tn93.cpp /usr/local/bin/tn93.cpp && chmod +x /usr/local/bin/tn93.cpp
+%runscript
+exec /bin/bash "$@"
+%startscript
+exec /bin/bash "$@"
