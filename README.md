@@ -2,7 +2,7 @@
 K-mer Assisted Reassortant Mapping Algorithm for Influenza
 
 ## Author:
-Matthew Wersebe, PhD
+Matthew Wersebe, PhD (uee9)
 
 US Centers for Disease Control and Prevention
 
@@ -29,7 +29,7 @@ Installation of `Snakemake` with the required software dependencies can be accom
 Example Installation:
 
 ```
-$ git clone git@github.com:uee9/KARMAflu.git
+$ git clone git@github.com:CDCgov/KARMAflu.git
 $ cd KARMAflu
 $ micromamba env create -n Snakemake -f conda/Snakemake.yaml
 
