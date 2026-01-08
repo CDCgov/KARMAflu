@@ -35,6 +35,11 @@ $ micromamba env create -n Snakemake -f conda/Snakemake.yaml
 
 $ conda activate Snakemake #activation not required before invoking the script.
 ```
+## Getting Started and Input data types:
+`KARMAflu` is designed to work on consensus influenza A virus gene segments in the FASTA format. We recommend using CDC's [MIRA assembler](https://github.com/CDCgov/MIRA) to perform the initial consensus viral genome assembly. In fact the current version of MIRA will output the `.genome` file created by the `./karmaflu annotate` command. Thus, if you use MIRA you can skip this step entirely (see below). However, you may use any viral genome assembly method that works for you as long as it outputs consensus sequences in FASTA format. 
+
+We have provided a test data set in the directory `testdata/test2.fasta` which provides example input files types and expected formatting. Each FASTA header should be named uniquely. Its wise to avoid the use of white spaces and other special characters that might not be correctly intrepreted. Instead, we recommend replacing white space characters with underscores in the fasta headers and removing any characters that are not alpha-numeric. The metadata CSV file should have a mapping between the unique genome/isolate id and its corresponding segments in the FASTA files. The only two required columns are `case_id` which uniquely identifies the isolate and `seqid` which should correspond to the fasta headers of its segment sequences exactly. Any other metadata can be included as well but will be ignored in the analysis steps. If you inspect the metadata file provided you will note that it is okay to use forward slashes as is common in influenza naming conventions, and white spaces. However as a note of caution, we would still recommend removing any special characters to be sure the `case_id` string is read correctly.
+
 ## Workflows and Usage:
 
 The application is run by invoking the `karmaflu` shell script from the command line. 
@@ -176,7 +181,7 @@ confirm Usage:
                         --source | -e: Path to singularity container. Default Micromamba.
 ```
 
-I've shipped a blast DB here in this repo and long with the sequences and metadata in the `models/blast/` directory. The unaligned sequences from the genome file in annotate are written as part of that step where the fasta headers are the segment's 'genome_id' from DAIS-ribosome. 
+We have shipped a blast DB here in this repo and long with the sequences and metadata in the `models/blast/` directory. The unaligned sequences from the genome file in annotate are written as part of that step where the fasta headers are the segment's 'genome_id' from DAIS-ribosome. 
 
 ### env and version:
 
@@ -191,7 +196,7 @@ The model objects in this repo are generally large. You may need to use git's `l
 ## Data and Availability:
 
 The data used to train the models in KARMAflu was compiled from various sources including NCBI, GISAID and from CDC surveillance programs and partners. This project was enabled in part by data from GISAID. We thank all those that share influenza sequencing data for their contributions to influenza surveillance. The file `models/blast/sequences.fasta.gz` may be in part subject to the GISAID Data Use Agreement 
-and cannot be redistributed via this repository. To obtain access: please contact the authors or open an issue.
+and cannot be redistributed via this repository. To obtain access please contact the authors or open an issue.
 
 ## Public Domain Standard Notice
 This repository constitutes a work of the United States Government and is not
