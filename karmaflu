@@ -54,7 +54,7 @@ elif [[ "${1}" == "env" ]]; then
 
 	echo "which micromamba: $(which micromamba)" >> ${LOG} 2>&1
 
-	echo "which snakemake: $(ls /groups/NCIRD/ID/VSDB/envs/Snakemake/bin/snakemake)" >> ${LOG} 2>&1
+	echo "which snakemake: $(ls ${PATH}/envs/Snakemake/bin/snakemake)" >> ${LOG} 2>&1
 
 	echo "which singularity: $(which singularity)" >> ${LOG} 2>&1
 
