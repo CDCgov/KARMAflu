@@ -1,3 +1,4 @@
 micromamba/*
 payloads/*
-
+.snakemake/*
+snakelog/*
