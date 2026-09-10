@@ -52,8 +52,6 @@ elif [[ "${1}" == "env" ]]; then
 
 	echo "which conda: $(which conda)" >> ${LOG} 2>&1
 
-	echo "which micromamba: $(which micromamba)" >> ${LOG} 2>&1
-
 	echo "which snakemake: $(ls ${PATH}/envs/Snakemake/bin/snakemake)" >> ${LOG} 2>&1
 
 	echo "which singularity: $(which singularity)" >> ${LOG} 2>&1
@@ -80,7 +78,6 @@ elif [[ "${1}" == "annotate" ]]; then
 			--snakefile | -s: Snakefile file path. Default workflows/annotate.smk.
 			--config | -f: Config file path. Default workflows/annotate_config.yaml.
 			--cores | -c: Number of cores. Default 12.
-			--source | -e: micromamba or conda. Default micromamba."
 		exit 0
 	fi
 
@@ -92,7 +89,6 @@ elif [[ "${1}" == "annotate" ]]; then
 	NOW=$(date +'%H-%M-%S')
 	SNAKEFILE="workflows/annotate.smk"
 	CONFIG="workflows/annotate_config.yaml"
-	SOURCE="micromamba"
 	CORES=12
 
 	#Configure command line options:
@@ -120,10 +116,6 @@ elif [[ "${1}" == "annotate" ]]; then
                 CONFIG="$2"
                 shift 2
                 ;;
-                --source | -e)
-                SOURCE="$2"
-                shift 2
-                ;;
                 --cores | -c)
                 CORES="$2"
                 shift 2
@@ -149,32 +141,10 @@ elif [[ "${1}" == "annotate" ]]; then
 		${NOW} as now,
 		${SNAKEFILE} as snakfile,
 		${CONFIG} as config file,
-		${SOURCE} as conda source,
 		${CORES} as number of cores."
 	fi
 
 	## Activate an envi with Snakemake
-
-	if [[ ${SOURCE} == "micromamba" ]]; then
-
-	# Exit on error
-	set -e
-
-	# 1. Define micromamba location
-	MAMBA_ROOT=/usr/local
-
-	# 2. Load micromamba shell hook
-	eval "$($MAMBA_ROOT/bin/micromamba shell hook --shell=bash)"
-
-	# 3. Activate the environment
-	micromamba activate Snakemake
-
-	else
-	## I guess you could figure out the source for your current machine and use that.
-	source ${SOURCE}
-	conda activate Snakemake
-
-	fi
 
 	## Create the snakelog directory:
 
@@ -196,16 +166,6 @@ elif [[ "${1}" == "annotate" ]]; then
 		-w 30 --use-singularity > ${SNAKELOG} 2>&1
 
 	## Exit the snakemake environment:
-
-	if [[ ${SOURCE} == "micromamba" ]]; then
-
-        micromamba deactivate
-
-        ## Specific to the CDP client machine
-        else
-	      conda deactivate
-
-	fi
 
 	## END and Notify:
 	TIMESTAMP=$(date)
