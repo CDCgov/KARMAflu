@@ -411,7 +411,7 @@ elif [[ "${1}" == "classify" ]]; then
                 --configfile ${CONFIG} \
                 --config today=${TODAY} now=${NOW} \
 		metadata=${METADATA} infile=${GENOME} pca_mods=${PCA} kknn_mods=${KKNN} \
-                -w 30 --use-singularity > ${SNAKELOG} 2>&1
+                -w 30 --use-singularity --singularity-args "-H $(pwd)" > ${SNAKELOG} 2>&1
 
         ## END and Notify:
         TIMESTAMP=$(date)

@@ -1,0 +1,9 @@
+case_id,seqid,genome_id,ctype,classifier_hash,analysis_date,ctype_host,segments_present,internal_segments_present,external_segments_present,human_h3_segments_present,human_h1_segments_present,zoonotic_segments_present,swine_segments_present,avian_segments_present,equine_segments_present,canine_segments_present,seasonal_segments_present,virus_type
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_PB2,3cbfeba81fd174c525f627cef1b4de4211b62318,A_PB2,0c97a4a54de7aef705579ec9f1ac3237,2026-11-02,A_PB2_PDMH1_HM,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_PB1,765dbaf8543b8e80f88672db9da9516a0f2599c9,A_PB1,df59285a573d9cdc8a3eb986173241d9,2026-11-02,A_PB1_PDMH1_HM,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_PA,0c0aede179e7b896d2792076aa870b26cb67d028,A_PA,6a72d194e7087621c0c6786cb07d7f7a,2026-11-02,A_PA_PDMH1_HM,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_HA_H3,e1e8ebb9fd65ea8192477aefe41243b2ae86ce98,A_HA_H3,ccdb10feeadbd1a3477481ad5b75cd13,2026-11-02,A_HA_H3_HM,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_NP,0d682a0b7932031b74c2ef93218242513fb499dd,A_NP,2e45a23b89a0e87fa34395b2342b321b,2026-11-02,A_NP_PDMH1_HM,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_NA_N2,bd77a6cc0edbf407f84fb5db78f837d241677ce5,A_NA_N2,bdcc97e85ab66c4faacc69f5f42597c0,2026-11-02,A_NA_N2_HM,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_MP,d486ee4120fe31b01a92430ffc3103e2397eaa85,A_MP,5f74a2acd9c56a2e3feda0e6f9510d8c,2026-11-02,A_MP_SW,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
+A/COATEPEQUE/FLU-3707/2026,COATEPEQUE-3707_A_NS,9de49b6ecfde85203d002b8028146b95c31a16d7,A_NS,557c54bc8d6f0dfb5bcbc70af3753e5b,2026-11-02,A_NS_SW,8,6,2,2,4,2,2,0,0,0,0,zoonotic reassortant
