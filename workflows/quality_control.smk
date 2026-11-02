@@ -6,7 +6,7 @@
 ## KARMAflu sequence quality control workflow.
 ##
 ################################################################################
-singularity: 'library://uee9/laiv_finder/laiv_finder:v0.0.0'
+singularity: 'docker://cdcgov/laiv_finder:v0.0.0'
 
 configfile: 'quality_control_config.yaml'
 
