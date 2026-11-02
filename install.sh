@@ -9,13 +9,9 @@
 ## exits with suggestion to install singularity.
 ##  
 
-export APP_ROOT=$(pwd)
+export MAMBA_ROOT_PREFIX=$(pwd)/micromamba
 
-export MAMBA_ROOT_PREFIX=$APP_ROOT/micromamba
-
-export ADD_TO_PATH=FALSE
-
-if [ -f "$APP_ROOT/payloads/micromamba" ]
+if [ -f "$(pwd)/payloads/micromamba" ]
 
 then
         echo "micromamba is installed! Skipping installation..."
@@ -23,51 +19,52 @@ then
 else
         echo "micromamba not found... installing local copy..."
 
-        mkdir -p "$APP_ROOT/payloads"
+        mkdir -p "$(pwd)/payloads"
 
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         ## Linux Machines
             if [[ "$(arch)" == "aarch64" ]]; then
                 curl -Ls https://micro.mamba.pm/api/micromamba/linux-aarch64/latest |\
-                tar -xvj -C "$APP_ROOT/payloads/" --strip-components=1 bin/micromamba
+                tar -xvj -C "$(pwd)/payloads/" --strip-components=1 bin/micromamba
             elif [[ "$(arch)" == "x86_64" ]]; then
                 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest |\
-                tar -xvj -C "$APP_ROOT/payloads/" --strip-components=1 bin/micromamba
+                tar -xvj -C "$(pwd)/payloads/" --strip-components=1 bin/micromamba
             fi
         elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac OSX Machines
             if [[ "$(arch)" == "arm64" ]]; then
-               curl -Ls https://micro.mamba.pm/api/micromamba/osx-arm64/latest |\
-                tar -xvj -C "$APP_ROOT/payloads/" --strip-components=1 bin/micromamba 
-            elif [[ "$(arch)" == "x86_64" ]]; then
-               curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/latest |\
-                tar -xvj -C "$APP_ROOT/payloads/" --strip-components=1 bin/micromamba
-            fi
+               curl -Ls https://micro.mamba.pm/api/micromamba/osx-arm64/latest |tar -xvj -C "$(pwd)/payloads/" --strip-components=1 bin/micromamba 
+            elif [[ "$(arch)" == "x86_64" || "$(arch)" == "i386" ]]; then
+               curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/latest |tar -xvj -C "$(pwd)/payloads/" --strip-components=1 bin/micromamba
+            else
+		echo "Unsupported macOSX arch: $(arch)" >&2
+		exit 1
+	    fi
         else
           error "Only Unixed-based operating systems are supported! Consider WSL if using Windows!"
           exit 1
         fi
        
-        eval "$($APP_ROOT/payloads/micromamba shell hook --shell=bash)"
+        eval "$($(pwd)/payloads/micromamba shell hook --shell=bash)"
 fi
 
 
-if [ -d "$APP_ROOT/micromamba/envs/Snakemake" ]
+if [ -d "$(pwd)/micromamba/envs/Snakemake" ]
 then
         echo "Snakemake is available! Testing installation paths ..."
 
-        eval "$($APP_ROOT/payloads/micromamba shell hook --shell=bash)"
+        eval "$($(pwd)/payloads/micromamba shell hook --shell=bash)"
 
-        echo "Snakemake Version: $($APP_ROOT/payloads/micromamba run -n Snakemake snakemake --version)"
+        echo "Snakemake Version: $($(pwd)/payloads/micromamba run -n Snakemake snakemake --version)"
 
 else
         echo "Snakemake is not available! Installing and configuring environment..."
 
-        $APP_ROOT/payloads/micromamba create \
+        $(pwd)/payloads/micromamba create \
         -c conda-forge -c bioconda -c nodefaults \
         -y -n Snakemake snakemake-minimal
 
-        echo "Snakemake Version: $($APP_ROOT/payloads/micromamba run -n Snakemake snakemake --version)"
+        echo "Snakemake Version: $($(pwd)/payloads/micromamba run -n Snakemake snakemake --version)"
 fi
 
 ### Check for singularity in the path:
@@ -86,19 +83,3 @@ elif [[ -z "$SINGENG" && -n "$APTENG" ]]; then
 else
     echo "singularity installed at ${SINGENG}. All set!"
 fi
-
-## Add to path?
-
-if [[ "$ADD_TO_PATH" == "true" ]]; then
-    
-    # Detect the user's shell rc file
-    case "$SHELL" in
-        */bash) SHELL_RC="${HOME}/.bashrc" ;;
-        */zsh)  SHELL_RC="${HOME}/.zshrc" ;;
-        *)
-            error "Unsupported shell: $SHELL. Add $APP_ROOT/bin to your PATH manually."
-            exit 1 ;;
-    esac
-
-fi
-

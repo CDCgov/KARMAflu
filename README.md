@@ -31,9 +31,11 @@ Example Installation:
 ```
 $ git clone git@github.com:CDCgov/KARMAflu.git
 $ cd KARMAflu
-$ micromamba env create -n Snakemake -f conda/Snakemake.yaml
-
-$ conda activate Snakemake #activation not required before invoking the script.
+$ ./install.sh ## installs micromamba and snakemake in an environment called Snakemake.##
+```
+Before running a previously installed karmaflu session:
+```
+$ export MAMBA_ROOT_PREFIX=$(pwd)/micromamba; eval "$(payloads/micromamba shell hook --shell=bash)"
 ```
 ## Getting Started and Input data types:
 `KARMAflu` is designed to work on consensus influenza A virus gene segments in the FASTA format. We recommend using CDC's [MIRA assembler](https://github.com/CDCgov/MIRA) to perform the initial consensus viral genome assembly. In fact the current version of MIRA will output the `.genome` file created by the `./karmaflu annotate` command. Thus, if you use MIRA you can skip this step entirely (see below). However, you may use any viral genome assembly method that works for you as long as it outputs consensus sequences in FASTA format. 
@@ -45,7 +47,11 @@ We have provided a test data set in the directory `testdata/test2.fasta` which p
 The application is run by invoking the `karmaflu` shell script from the command line. 
 
 ```
-$ ./karmaflu --help
+## Anytime before running karmaflu you can make the micromamba environment executable as a CLI::
+$ export MAMBA_ROOT_PREFIX=$(pwd)/micromamba
+$ eval "$(payloads/micromamba shell hook --shell=bash)"
+## run micromamba as a CLI
+$ micromamba run -n Snakemake ./karmaflu --help
 ```
 
 Outputs the various the positional arguements the script takes:
@@ -65,7 +71,7 @@ Usage: positional arguements
 The annotation workflow is the entry point for new data. It generates a tab delimited text file with the ending `.genome` which includes aligned segment sequences from `DAIS-ribosome` a utility which annotates and aligns influenza viral genome segments.
 
 ```
-$ ./karmaflu annotate --help
+$ micromamba run -n Snakemake ./karmaflu annotate --help
 ```
 Annotate takes several named arguements:
 
@@ -86,7 +92,7 @@ The fasta file is required to run the annotate command. An example fasta file is
 The qc worklfow is second (optional) step in the data processing steps. It will perform a number of genome quality control tasks to make sure the data going into the classification steps are of sufficient quality. It will divert any low quality data from additional characterization (excessive N, IUPAC ambiguity, missing alignment space, etc.). Additionally, it will find and remove any LAIV (Live Attenuated Influenza Vaccine) MDV (Master Donor Virus) segments or HGR (High Growth Reassortant) segments from the input file. It does this by comparing aligned sequences to references from A/PR/8/34 (H1N1), a common HGR backbone, and A/Ann Arbor/6/1960 (H2N2) the cold adapted MDV for human LAIVs produced in most countries. It uses a TN93 genetic distance cut off for each segment to determine if it is likely an LAIV or HGR segment. 
 
 ```
-$ ./karmaflu qc --help
+$ micromamba run -n Snakemake ./karmaflu qc --help
 ```
 qc takes several named arguements:
 
@@ -136,7 +142,7 @@ The fourth and final step uses a metadata file storing the mapping between indiv
 TABLE 2: Potential virus types and meanings. 
 
 ```
-$ ./karmaflu classify --help
+$ micromamba run -n Snakemake ./karmaflu classify --help
 ```
 classify takes several named arguements:
 
@@ -162,7 +168,7 @@ The genome file is required to run the classify step along with the metadata fil
 The confirm step is used to identify how a classification was reached. At CDC, any time a virus is not normal (i.e., of one of the two non-reassortant categoreies in table 2) we further characterize the genome. This is accomplished by taking the query sequences and using BLAST to identify the training set sequences with high homology. It also contains some metadata information for the sequences such as host, isl_ha_type and median collection date (when more then one instance of the sequence was found). This metadata is used to give context about a particular classification. Additionally, this pipeline gives a 'blast_class' which is the most common hits' ctype_host. 
 
 ```
-$ ./karmaflu confirm --help
+$ micromamba run -n Snakemake ./karmaflu confirm --help
 ```
 confirm takes several named arguements:
 
