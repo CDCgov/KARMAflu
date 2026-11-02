@@ -33,6 +33,15 @@ $ git clone git@github.com:CDCgov/KARMAflu.git
 $ cd KARMAflu
 $ ./install.sh ## installs micromamba and snakemake in an environment called Snakemake.##
 ```
+
+If you have trouble with the lfs on your system, use wget to download models: 
+```
+$ cd models/pca
+$ wget https://media.githubusercontent.com/media/CDCgov/KARMAflu/main/models/pca/pca_models.rds.gz
+$ cd ../knn
+$ wget https://media.githubusercontent.com/media/CDCgov/KARMAflu/main/models/knn/kknn_models.rds.gz
+```
+
 Before running a previously installed karmaflu session:
 ```
 $ export MAMBA_ROOT_PREFIX=$(pwd)/micromamba; eval "$(payloads/micromamba shell hook --shell=bash)"
