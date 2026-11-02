@@ -7,7 +7,7 @@
 ##
 ################################################################################
 
-singularity: 'docker://cdcgov/karmaflu:v0.0.0'
+singularity: 'docker://cdcgov/karma-flu:v0.0.0'
 
 configfile: 'classify_config.yaml'
 
