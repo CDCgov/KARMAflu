@@ -1,6 +1,5 @@
 Bootstrap: docker
 From: r-base:4.5.0
-Stage: spython-base
 
 %files
 Certs/bundle-ca.crt /etc/ssl/certs
