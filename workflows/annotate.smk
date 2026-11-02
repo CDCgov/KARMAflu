@@ -16,15 +16,15 @@ now = config['now']
 
 rule all:
 	input:
-		annotation = expand("{today}/{now}/input/{today}_{now}_DAIS-ribosome.genome", today = config['today'], now = config['now'])
+		annotation = expand("output/{today}/{now}/input/{today}_{now}_DAIS-ribosome.genome", today = config['today'], now = config['now'])
 
 rule annotate:
 	params:
-		prefix = "{today}/{now}/input/{today}_{now}_DAIS-ribosome"
+		prefix = "output/{today}/{now}/input/{today}_{now}_DAIS-ribosome"
 	input:
 		fasta = config['infile']
 	output:
-		annotation = "{today}/{now}/input/{today}_{now}_DAIS-ribosome.genome"
+		annotation = "output/{today}/{now}/input/{today}_{now}_DAIS-ribosome.genome"
 	threads: config['cores']
 	shell:
 		"""
