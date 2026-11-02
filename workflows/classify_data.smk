@@ -13,17 +13,17 @@ configfile: 'classify_config.yaml'
 
 rule all:
 	input:
-		kmers = expand("{today}/{now}/input/{today}_{now}_kf_kmer_output.csv", today = config['today'], now = config['now']),
-		loadings = expand("{today}/{now}/input/{today}_{now}_kf_pca_output.csv", today = config['today'], now = config['now']),
-		classes = expand("{today}/{now}/input/{today}_{now}_kf_segment_classifications.csv", today = config['today'], now = config['now']),
-		virus_types = expand("{today}/{now}/input/{today}_{now}_kf_isolate_classifications.csv", today = config['today'], now = config['now'])
+		kmers = expand("output/{today}/{now}/input/{today}_{now}_kf_kmer_output.csv", today = config['today'], now = config['now']),
+		loadings = expand("output/{today}/{now}/input/{today}_{now}_kf_pca_output.csv", today = config['today'], now = config['now']),
+		classes = expand("output/{today}/{now}/input/{today}_{now}_kf_segment_classifications.csv", today = config['today'], now = config['now']),
+		virus_types = expand("output/{today}/{now}/input/{today}_{now}_kf_isolate_classifications.csv", today = config['today'], now = config['now'])
 
 rule kmer:
 	input:
 		genome_file = config['infile']
 	output:
-		kmers = "{today}/{now}/input/{today}_{now}_kf_kmer_output.csv",
-		blast_fasta = "{today}/{now}/input/{today}_{now}_kf_BLAST.fasta"
+		kmers = "output/{today}/{now}/input/{today}_{now}_kf_kmer_output.csv",
+		blast_fasta = "output/{today}/{now}/input/{today}_{now}_kf_BLAST.fasta"
 	shell:
 		"""
 		./scripts/kf_count_kmers.R \
@@ -40,7 +40,7 @@ rule pca:
 		kmers = rules.kmer.output.kmers
 	threads: 10
 	output:
-		loadings = "{today}/{now}/input/{today}_{now}_kf_pca_output.csv"
+		loadings = "output/{today}/{now}/input/{today}_{now}_kf_pca_output.csv"
 	shell:
 		"""
 		./scripts/kf_predict_pca.R \
@@ -59,7 +59,7 @@ rule classify:
 	input:
 		loadings = rules.pca.output.loadings		
 	output:
-		classes = "{today}/{now}/input/{today}_{now}_kf_segment_classifications.csv"
+		classes = "output/{today}/{now}/input/{today}_{now}_kf_segment_classifications.csv"
 	shell:
 		"""
 		./scripts/kf_classify.R \
@@ -75,7 +75,7 @@ rule virus_typer:
 	input:
 		classes = rules.classify.output.classes
 	output:
-		virus_types = "{today}/{now}/input/{today}_{now}_kf_isolate_classifications.csv"
+		virus_types = "output/{today}/{now}/input/{today}_{now}_kf_isolate_classifications.csv"
 	shell:
 		"""
 		./scripts/kf_virus_typer.R \
