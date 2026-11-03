@@ -20,7 +20,7 @@ rule blastn:
 		outfmt = "'10 qseqid sseqid evalue bitscore length pident mismatch'",
 		targets = 100
 	singularity:
-		"docker://staphb/blast:latest"
+		"docker://cdcgov/ncbi_blast:2.17.0"
 	threads: 12
 	input:
 		fasta = config['infile']
