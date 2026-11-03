@@ -442,7 +442,7 @@ elif [[ "${1}" == "confirm" ]]; then
 
 	##set up defaults:
 	FASTA="NA"
-	BLASTDB="models/blast/blast_db.out"
+	BLASTDB="models/blast/blast_bd.out"
 	QUERYM="NA"
 	TARGETM="models/blast/db_metadata.rds.gz"
 	NOW=$(date +'%H-%M-%S')
