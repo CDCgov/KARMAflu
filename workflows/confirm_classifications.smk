@@ -46,7 +46,7 @@ rule compile_blast_results:
 	output: 
 		report = "{today}/{now}/input/{today}_{now}_kf_blast_confirm.csv"
 	singularity:
-		"library://uee9/karma-flu/karma-flu:v0.0.0"
+		"docker://cdcgov/karmaflu:v0.0.0"
 	shell:
 		"""
 		./scripts/kf_combine_blast_results.R \
