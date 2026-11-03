@@ -11,7 +11,7 @@ configfile: 'confirm_classifications_config.yaml'
 
 rule all:
 	input:
-		outreport = expand("{today}/{now}/input/{today}_{now}_kf_blast_confirm.csv", today = config['today'], now = config['now'])
+		outreport = expand("output/{today}/{now}/input/{today}_{now}_kf_blast_confirm.csv", today = config['today'], now = config['now'])
 
 
 rule blastn:
@@ -25,7 +25,7 @@ rule blastn:
 	input:
 		fasta = config['infile']
 	output:
-		blastresults = "{today}/{now}/input/{today}_{now}_hits.csv"
+		blastresults = "output/{today}/{now}/input/{today}_{now}_hits.csv"
 	shell:
 		"""
 		blastn \
@@ -44,7 +44,7 @@ rule compile_blast_results:
 		hits = rules.blastn.output.blastresults,
 		query_meta = config['query_meta']
 	output: 
-		report = "{today}/{now}/input/{today}_{now}_kf_blast_confirm.csv"
+		report = "output/{today}/{now}/input/{today}_{now}_kf_blast_confirm.csv"
 	singularity:
 		"docker://cdcgov/karmaflu:v0.0.0"
 	shell:
