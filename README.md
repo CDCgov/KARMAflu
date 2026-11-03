@@ -143,7 +143,7 @@ The fourth and final step uses a metadata file storing the mapping between indiv
 |virus_type|logic|
 |----------|-----|
 |non-reaassortant h1 | All segments belong to human A(H1N1)pdm09 |
-|non-reaassortant h1 | All segments belong to human A(H3N2) |
+|non-reaassortant h3 | All segments belong to human A(H3N2) |
 |zoonotic virus | All segments belong to zoonotic classes (including human seasonal A(H1N1))|
 |intersubtype reassortant | Has segments belonging to both human classes.
 |zoonotic reassortant | Has segments belonging to both human class(es) and zoonotic classes |
