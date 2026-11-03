@@ -10,8 +10,8 @@ LABEL software.version=$BLAST_VER
 LABEL description="Finds matches in sequencing reads"
 LABEL website="https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download"
 LABEL license="https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/scripts/projects/blast/LICENSE"
-LABEL maintainer="Erin Young"
-LABEL maintainer.email="eriny@utah.gov"
+LABEL maintainer="Matthew Wersebe"
+LABEL maintainer.email="uee9@cdc.gov"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
